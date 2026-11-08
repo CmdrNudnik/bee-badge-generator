@@ -25,10 +25,10 @@ Open the published GitHub Pages site, choose the puzzle date, optionally enter y
 
 ## Technical notes
 
-The page requests puzzle data from the undocumented endpoint `https://www.nytimes.com/svc/spelling-bee/v1/{date}.json`. NYT may change or discontinue this endpoint. Browser access may also be blocked by cross-origin (CORS) policy; if that happens, the page reports the problem rather than guessing puzzle data or generating an unreliable badge. A small server-side proxy (for example, a Cloudflare Worker) would be the next step if browser requests are blocked.
+The page requests puzzle data from the undocumented endpoint `https://www.nytimes.com/svc/spelling-bee/v1/{date}.json`. NYT may change or discontinue this endpoint. Because NYT does not permit the GitHub Pages origin to read the endpoint directly in all browsers, this repository now includes `worker.js`, a small Cloudflare Worker proxy. Deploy it to a Cloudflare Workers URL, then configure the page to use that URL as its puzzle-data API. The Worker only accepts requests from this GitHub Pages site, validates the date, and forwards the request to NYT. It does not store scores or personal information.
 
 The badge checksum is an MD5 digest of the exact query string `d=DATE&l=LETTERS&p=POINTS&r=Genius`, matching the format used by NYT's badge URL.
 
-## Disclaimer
+## Deploy the CORS proxy (one-time setup)\n\n1. Sign in to Cloudflare and open **Workers & Pages**.\n2. Create a Worker (for example, name it `bee-badge-api`).\n3. Replace the starter code with the contents of this repository's `worker.js`, then deploy.\n4. Copy the deployed Worker URL (it will look like `https://bee-badge-api.<your-subdomain>.workers.dev`).\n5. The page still needs to be pointed at that exact URL; update the `PUZZLE_API_BASE` setting in `index.html` to the Worker URL. The URL will be added after the Worker is deployed.\n\nTo test the Worker directly, open `https://YOUR-WORKER-URL/?date=2026-11-08`. It should return JSON containing the puzzle data.\n\n## Disclaimer
 
 This is an unofficial fan-made project and is not affiliated with, endorsed by, or sponsored by The New York Times. NYT Spelling Bee names and badge assets belong to their respective owners.
