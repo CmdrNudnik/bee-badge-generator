@@ -57,7 +57,8 @@ footer{margin-top:28px;font-size:.82rem;color:var(--muted)}a{color:var(--blue)}
 <script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.19.0/js/md5.min.js"></script>
 <script>
 const $ = id => document.getElementById(id);
-const api = date => `https://www.nytimes.com/svc/spelling-bee/v1/${date}.json`;
+const PUZZLE_API_BASE = "https://bee-badge-api.steve-397.workers.dev";
+const api = date => `${PUZZLE_API_BASE}/?date=${encodeURIComponent(date)}`;
 const badgeBase = "https://www.nytimes.com/badges/games/v1/bee.png";
 function first(obj, keys){for(const k of keys)if(obj && obj[k]!=null)return obj[k];return null}
 function extract(payload){
@@ -93,7 +94,7 @@ $("form").addEventListener("submit",async e=>{
   try{
     const date=$("date").value;if(!/^\d{4}-\d{2}-\d{2}$/.test(date))throw Error("Choose a valid puzzle date.");
     const response=await fetch(api(date),{headers:{Accept:"application/json"},cache:"no-store"});
-    if(!response.ok)throw Error(`NYT puzzle lookup failed (HTTP ${response.status}). The date may be unavailable.`);
+    if(!response.ok)throw Error(`Puzzle lookup failed (HTTP ${response.status}). The date may be unavailable, or the proxy may need attention.`);
     const payload=await response.json();const {letters,max}=extract(payload);
     const minimum=Math.floor(max*.70);const raw=$("points").value.trim();
     const points=raw===""?minimum:Number(raw);
@@ -107,7 +108,7 @@ $("form").addEventListener("submit",async e=>{
     $("copyReddit").onclick=()=>copyText(`[![NYT Spelling Bee Genius Badge](${url})](${url})`,"Reddit Markdown copied.");
   }catch(err){
     $("status").className="error";
-    const msg=err instanceof TypeError?"Your browser could not read NYT's puzzle data. This is usually a cross-origin (CORS) restriction; the badge cannot be generated safely from this page until a proxy is added.":err.message;
+    const msg=err instanceof TypeError?"Your browser could not reach the puzzle-data proxy. Check the Worker deployment and try again.":err.message;
     $("status").textContent=msg;
   }finally{$("generate").disabled=false}
 });
